@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CES 2026 — Sensory Graph</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #0a0a0f;
+      min-height: 100vh;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .graph-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Edge styles */
+    .edge {
+      stroke-width: 1.5;
+      fill: none;
+      opacity: 0.6;
+    }
+
+    .edge-sight { stroke: #667eea; }
+    .edge-sound { stroke: #f5576c; }
+    .edge-touch { stroke: #00f2fe; }
+    .edge-taste { stroke: #fee140; }
+    .edge-scent { stroke: #a8edea; }
+    .edge-space { stroke: #d299c2; }
+    .edge-time { stroke: #66a6ff; }
+    .edge-system { stroke: #fda085; }
+
+    .edge-main {
+      stroke-width: 2.5;
+      opacity: 0.8;
+    }
+
+    /* Node styles */
+    .node {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .node:hover {
+      transform: scale(1.1);
+    }
+
+    .center-circle {
+      fill: #fff;
+      filter: drop-shadow(0 0 30px rgba(255,255,255,0.4));
+    }
+
+    .sense-circle {
+      filter: drop-shadow(0 0 15px currentColor);
+    }
+
+    .product-circle {
+      opacity: 0.9;
+    }
+
+    .product-circle:hover {
+      opacity: 1;
+    }
+
+    /* Text styles */
+    .center-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      font-weight: 600;
+      fill: #0a0a0f;
+    }
+
+    .center-subtext {
+      font-size: 10px;
+      fill: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .sense-text {
+      font-size: 11px;
+      font-weight: 600;
+      fill: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .sense-emoji {
+      font-size: 18px;
+    }
+
+    .sense-count {
+      font-size: 8px;
+      fill: rgba(255,255,255,0.7);
+    }
+
+    .product-text {
+      font-size: 8px;
+      fill: #fff;
+      opacity: 0.9;
+    }
+
+    /* Gradient definitions */
+    .grad-sight { stop-color: #667eea; }
+    .grad-sight-2 { stop-color: #764ba2; }
+    .grad-sound { stop-color: #f093fb; }
+    .grad-sound-2 { stop-color: #f5576c; }
+    .grad-touch { stop-color: #4facfe; }
+    .grad-touch-2 { stop-color: #00f2fe; }
+    .grad-taste { stop-color: #fa709a; }
+    .grad-taste-2 { stop-color: #fee140; }
+    .grad-scent { stop-color: #a8edea; }
+    .grad-scent-2 { stop-color: #fed6e3; }
+    .grad-space { stop-color: #d299c2; }
+    .grad-space-2 { stop-color: #fef9d7; }
+    .grad-time { stop-color: #89f7fe; }
+    .grad-time-2 { stop-color: #66a6ff; }
+    .grad-system { stop-color: #f6d365; }
+    .grad-system-2 { stop-color: #fda085; }
+
+    /* Title */
+    .title {
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 10;
+    }
+
+    .title h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .title p {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 5px;
+    }
+
+    /* Legend */
+    .legend {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 20px;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .edge {
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    .edge-main {
+      animation: pulse 2s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="title">
+    <h1>CES 2026 — Sensory Graph</h1>
+    <p>49 products mapped by how they reach you</p>
+  </div>
+
+  <div class="graph-container">
+    <svg id="graph" viewBox="0 0 1400 900">
+      <defs>
+        <!-- Gradients for sense nodes -->
+        <linearGradient id="gradSight" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" class="grad-sight"/>
+          <stop offset="100%" class="grad-sight-2"/>
+        </linearGradient>
+        <linearGradient id="gradSound" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" class="grad-sound"/>
+          <stop offset="100%" class="grad-sound-2"/>
+        </linearGradient>
+        <linearGradient id="gradTouch" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" class="grad-touch"/>
+          <stop offset="100%" class="grad-touch-2"/>
+        </linearGradient>
+        <linearGradient id="gradTaste" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" class="grad-taste"/>
+          <stop offset="100%" class="grad-taste-2"/>
+        </linearGradient>
+        <linearGradient id="gradScent" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" class="grad-scent"/>
+          <stop offset="100%" class="grad-scent-2"/>
+        </linearGradient>
+        <linearGradient id="gradSpace" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" class="grad-space"/>
+          <stop offset="100%" class="grad-space-2"/>
+        </linearGradient>
+        <linearGradient id="gradTime" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" class="grad-time"/>
+          <stop offset="100%" class="grad-time-2"/>
+        </linearGradient>
+        <linearGradient id="gradSystem" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" class="grad-system"/>
+          <stop offset="100%" class="grad-system-2"/>
+        </linearGradient>
+      </defs>
+
+      <!-- EDGES: Center to Senses -->
+      <g class="edges-main">
+        <line class="edge edge-main edge-sight" x1="700" y1="450" x2="700" y2="180"/>
+        <line class="edge edge-main edge-sound" x1="700" y1="450" x2="1050" y2="250"/>
+        <line class="edge edge-main edge-touch" x1="700" y1="450" x2="1150" y2="450"/>
+        <line class="edge edge-main edge-taste" x1="700" y1="450" x2="1050" y2="650"/>
+        <line class="edge edge-main edge-scent" x1="700" y1="450" x2="700" y2="720"/>
+        <line class="edge edge-main edge-space" x1="700" y1="450" x2="350" y2="650"/>
+        <line class="edge edge-main edge-time" x1="700" y1="450" x2="250" y2="450"/>
+        <line class="edge edge-main edge-system" x1="700" y1="450" x2="350" y2="250"/>
+      </g>
+
+      <!-- EDGES: Sight to Products -->
+      <g class="edges-sight">
+        <line class="edge edge-sight" x1="700" y1="180" x2="580" y2="80"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="640" y2="70"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="700" y2="60"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="760" y2="70"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="820" y2="80"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="860" y2="110"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="880" y2="150"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="540" y2="110"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="520" y2="150"/>
+        <line class="edge edge-sight" x1="700" y1="180" x2="890" y2="190"/>
+      </g>
+
+      <!-- EDGES: Sound to Products -->
+      <g class="edges-sound">
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1150" y2="140"/>
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1200" y2="170"/>
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1230" y2="210"/>
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1250" y2="260"/>
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1240" y2="310"/>
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1210" y2="350"/>
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1160" y2="380"/>
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1100" y2="130"/>
+        <line class="edge edge-sound" x1="1050" y1="250" x2="1180" y2="120"/>
+      </g>
+
+      <!-- EDGES: Touch to Products -->
+      <g class="edges-touch">
+        <line class="edge edge-touch" x1="1150" y1="450" x2="1280" y2="380"/>
+        <line class="edge edge-touch" x1="1150" y1="450" x2="1300" y2="420"/>
+        <line class="edge edge-touch" x1="1150" y1="450" x2="1310" y2="460"/>
+        <line class="edge edge-touch" x1="1150" y1="450" x2="1300" y2="500"/>
+        <line class="edge edge-touch" x1="1150" y1="450" x2="1280" y2="540"/>
+        <line class="edge edge-touch" x1="1150" y1="450" x2="1250" y2="570"/>
+        <line class="edge edge-touch" x1="1150" y1="450" x2="1260" y2="350"/>
+        <line class="edge edge-touch" x1="1150" y1="450" x2="1230" y2="590"/>
+      </g>
+
+      <!-- EDGES: Taste to Products -->
+      <g class="edges-taste">
+        <line class="edge edge-taste" x1="1050" y1="650" x2="1150" y2="720"/>
+        <line class="edge edge-taste" x1="1050" y1="650" x2="1180" y2="680"/>
+        <line class="edge edge-taste" x1="1050" y1="650" x2="1200" y2="640"/>
+        <line class="edge edge-taste" x1="1050" y1="650" x2="1180" y2="760"/>
+        <line class="edge edge-taste" x1="1050" y1="650" x2="1130" y2="790"/>
+        <line class="edge edge-taste" x1="1050" y1="650" x2="1080" y2="810"/>
+      </g>
+
+      <!-- EDGES: Scent to Products -->
+      <g class="edges-scent">
+        <line class="edge edge-scent" x1="700" y1="720" x2="700" y2="820"/>
+      </g>
+
+      <!-- EDGES: Space to Products -->
+      <g class="edges-space">
+        <line class="edge edge-space" x1="350" y1="650" x2="250" y2="720"/>
+        <line class="edge edge-space" x1="350" y1="650" x2="220" y2="680"/>
+      </g>
+
+      <!-- EDGES: Time to Products -->
+      <g class="edges-time">
+        <line class="edge edge-time" x1="250" y1="450" x2="120" y2="410"/>
+        <line class="edge edge-time" x1="250" y1="450" x2="120" y2="490"/>
+      </g>
+
+      <!-- EDGES: System to Products -->
+      <g class="edges-system">
+        <line class="edge edge-system" x1="350" y1="250" x2="200" y2="140"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="150" y2="180"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="120" y2="230"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="110" y2="280"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="120" y2="330"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="250" y2="120"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="300" y2="100"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="360" y2="90"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="420" y2="100"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="470" y2="130"/>
+        <line class="edge edge-system" x1="350" y1="250" x2="500" y2="180"/>
+      </g>
+
+      <!-- CENTER NODE -->
+      <g class="node center-node">
+        <circle class="center-circle" cx="700" cy="450" r="55"/>
+        <text class="center-text" x="700" y="445" text-anchor="middle">Ode</text>
+        <text class="center-subtext" x="700" y="465" text-anchor="middle">by Muno</text>
+      </g>
+
+      <!-- SIGHT NODE & PRODUCTS -->
+      <g class="node sense-node-sight">
+        <circle class="sense-circle" cx="700" cy="180" r="40" fill="url(#gradSight)"/>
+        <text class="sense-emoji" x="700" y="175" text-anchor="middle">👁️</text>
+        <text class="sense-text" x="700" y="195" text-anchor="middle">Sight</text>
+        <text class="sense-count" x="700" y="210" text-anchor="middle">10</text>
+      </g>
+      <g class="products-sight">
+        <circle class="product-circle" cx="580" cy="80" r="12" fill="#667eea"/>
+        <text class="product-text" x="580" y="60" text-anchor="middle">K-Scan</text>
+        <circle class="product-circle" cx="640" cy="70" r="12" fill="#667eea"/>
+        <text class="product-text" x="640" y="50" text-anchor="middle">Skinsight</text>
+        <circle class="product-circle" cx="700" cy="60" r="12" fill="#667eea"/>
+        <text class="product-text" x="700" y="40" text-anchor="middle">Derma-Reader</text>
+        <circle class="product-circle" cx="760" cy="70" r="12" fill="#667eea"/>
+        <text class="product-text" x="760" y="50" text-anchor="middle">iPolish</text>
+        <circle class="product-circle" cx="820" cy="80" r="12" fill="#667eea"/>
+        <text class="product-text" x="820" y="60" text-anchor="middle">Dr.AlignNavi</text>
+        <circle class="product-circle" cx="860" cy="110" r="12" fill="#764ba2"/>
+        <text class="product-text" x="900" y="105" text-anchor="start">Hisense 163MX</text>
+        <circle class="product-circle" cx="880" cy="150" r="12" fill="#764ba2"/>
+        <text class="product-text" x="920" y="145" text-anchor="start">116" Mini LED</text>
+        <circle class="product-circle" cx="890" cy="190" r="12" fill="#764ba2"/>
+        <text class="product-text" x="930" y="185" text-anchor="start">UDC IR OLED</text>
+        <circle class="product-circle" cx="540" cy="110" r="12" fill="#764ba2"/>
+        <text class="product-text" x="500" y="105" text-anchor="end">HEYMIRROR</text>
+        <circle class="product-circle" cx="520" cy="150" r="12" fill="#764ba2"/>
+        <text class="product-text" x="480" y="145" text-anchor="end">Samsung Transparent</text>
+      </g>
+
+      <!-- SOUND NODE & PRODUCTS -->
+      <g class="node sense-node-sound">
+        <circle class="sense-circle" cx="1050" cy="250" r="40" fill="url(#gradSound)"/>
+        <text class="sense-emoji" x="1050" y="245" text-anchor="middle">🔊</text>
+        <text class="sense-text" x="1050" y="265" text-anchor="middle">Sound</text>
+        <text class="sense-count" x="1050" y="280" text-anchor="middle">9</text>
+      </g>
+      <g class="products-sound">
+        <circle class="product-circle" cx="1100" cy="130" r="10" fill="#f5576c"/>
+        <text class="product-text" x="1115" y="125" text-anchor="start">Music Studio 5</text>
+        <circle class="product-circle" cx="1150" cy="140" r="10" fill="#f5576c"/>
+        <text class="product-text" x="1165" y="135" text-anchor="start">Acoustic Eye</text>
+        <circle class="product-circle" cx="1180" cy="120" r="10" fill="#f5576c"/>
+        <text class="product-text" x="1195" y="115" text-anchor="start">AiVATAR</text>
+        <circle class="product-circle" cx="1200" cy="170" r="10" fill="#f5576c"/>
+        <text class="product-text" x="1215" y="165" text-anchor="start">Perisphere</text>
+        <circle class="product-circle" cx="1230" cy="210" r="10" fill="#f093fb"/>
+        <text class="product-text" x="1245" y="205" text-anchor="start">Music Canvas</text>
+        <circle class="product-circle" cx="1250" cy="260" r="10" fill="#f093fb"/>
+        <text class="product-text" x="1265" y="255" text-anchor="start">Timekettle W4</text>
+        <circle class="product-circle" cx="1240" cy="310" r="10" fill="#f093fb"/>
+        <text class="product-text" x="1255" y="305" text-anchor="start">XEO 202</text>
+        <circle class="product-circle" cx="1210" cy="350" r="10" fill="#f093fb"/>
+        <text class="product-text" x="1225" y="345" text-anchor="start">Nirva AI</text>
+        <circle class="product-circle" cx="1160" cy="380" r="10" fill="#f093fb"/>
+        <text class="product-text" x="1175" y="375" text-anchor="start">Lollipop Star</text>
+      </g>
+
+      <!-- TOUCH NODE & PRODUCTS -->
+      <g class="node sense-node-touch">
+        <circle class="sense-circle" cx="1150" cy="450" r="40" fill="url(#gradTouch)"/>
+        <text class="sense-emoji" x="1150" y="445" text-anchor="middle">🤚</text>
+        <text class="sense-text" x="1150" y="465" text-anchor="middle">Touch</text>
+        <text class="sense-count" x="1150" y="480" text-anchor="middle">8</text>
+      </g>
+      <g class="products-touch">
+        <circle class="product-circle" cx="1260" cy="350" r="10" fill="#00f2fe"/>
+        <text class="product-text" x="1275" y="345" text-anchor="start">Light Straight</text>
+        <circle class="product-circle" cx="1280" cy="380" r="10" fill="#00f2fe"/>
+        <text class="product-text" x="1295" y="375" text-anchor="start">AI Turing Keys</text>
+        <circle class="product-circle" cx="1300" cy="420" r="10" fill="#00f2fe"/>
+        <text class="product-text" x="1315" y="415" text-anchor="start">Ultrasonics C-200</text>
+        <circle class="product-circle" cx="1310" cy="460" r="10" fill="#4facfe"/>
+        <text class="product-text" x="1325" y="455" text-anchor="start">AI Shower</text>
+        <circle class="product-circle" cx="1300" cy="500" r="10" fill="#4facfe"/>
+        <text class="product-text" x="1315" y="495" text-anchor="start">MediSpa</text>
+        <circle class="product-circle" cx="1280" cy="540" r="10" fill="#4facfe"/>
+        <text class="product-text" x="1295" y="535" text-anchor="start">SCAR</text>
+        <circle class="product-circle" cx="1250" cy="570" r="10" fill="#4facfe"/>
+        <text class="product-text" x="1265" y="565" text-anchor="start">SWAVI</text>
+        <circle class="product-circle" cx="1230" cy="590" r="10" fill="#4facfe"/>
+        <text class="product-text" x="1245" y="610" text-anchor="start">XTool UV</text>
+      </g>
+
+      <!-- TASTE NODE & PRODUCTS -->
+      <g class="node sense-node-taste">
+        <circle class="sense-circle" cx="1050" cy="650" r="40" fill="url(#gradTaste)"/>
+        <text class="sense-emoji" x="1050" y="645" text-anchor="middle">👅</text>
+        <text class="sense-text" x="1050" y="665" text-anchor="middle">Taste</text>
+        <text class="sense-count" x="1050" y="680" text-anchor="middle">6</text>
+      </g>
+      <g class="products-taste">
+        <circle class="product-circle" cx="1200" cy="640" r="10" fill="#fee140"/>
+        <text class="product-text" x="1215" y="635" text-anchor="start">Ecoldbrew</text>
+        <circle class="product-circle" cx="1180" cy="680" r="10" fill="#fee140"/>
+        <text class="product-text" x="1195" y="675" text-anchor="start">Allergen Alert</text>
+        <circle class="product-circle" cx="1150" cy="720" r="10" fill="#fa709a"/>
+        <text class="product-text" x="1165" y="715" text-anchor="start">Medi Water AI</text>
+        <circle class="product-circle" cx="1180" cy="760" r="10" fill="#fa709a"/>
+        <text class="product-text" x="1195" y="755" text-anchor="start">Samsung Fridge</text>
+        <circle class="product-circle" cx="1130" cy="790" r="10" fill="#fa709a"/>
+        <text class="product-text" x="1145" y="785" text-anchor="start">GE Profile</text>
+        <circle class="product-circle" cx="1080" cy="810" r="10" fill="#fa709a"/>
+        <text class="product-text" x="1095" y="830" text-anchor="start">Instafarm</text>
+      </g>
+
+      <!-- SCENT NODE & PRODUCTS -->
+      <g class="node sense-node-scent">
+        <circle class="sense-circle" cx="700" cy="720" r="40" fill="url(#gradScent)"/>
+        <text class="sense-emoji" x="700" y="715" text-anchor="middle">👃</text>
+        <text class="sense-text" x="700" y="735" text-anchor="middle" fill="#333">Scent</text>
+        <text class="sense-count" x="700" y="750" text-anchor="middle" fill="#555">1</text>
+      </g>
+      <g class="products-scent">
+        <circle class="product-circle" cx="700" cy="820" r="12" fill="#a8edea"/>
+        <text class="product-text" x="700" y="850" text-anchor="middle">Deepscent AI</text>
+      </g>
+
+      <!-- SPACE NODE & PRODUCTS -->
+      <g class="node sense-node-space">
+        <circle class="sense-circle" cx="350" cy="650" r="40" fill="url(#gradSpace)"/>
+        <text class="sense-emoji" x="350" y="645" text-anchor="middle">🏠</text>
+        <text class="sense-text" x="350" y="665" text-anchor="middle" fill="#333">Space</text>
+        <text class="sense-count" x="350" y="680" text-anchor="middle" fill="#555">2</text>
+      </g>
+      <g class="products-space">
+        <circle class="product-circle" cx="220" cy="680" r="10" fill="#d299c2"/>
+        <text class="product-text" x="205" y="675" text-anchor="end">AI Transformer</text>
+        <circle class="product-circle" cx="250" cy="720" r="10" fill="#d299c2"/>
+        <text class="product-text" x="235" y="740" text-anchor="end">Halla AI House</text>
+      </g>
+
+      <!-- TIME NODE & PRODUCTS -->
+      <g class="node sense-node-time">
+        <circle class="sense-circle" cx="250" cy="450" r="40" fill="url(#gradTime)"/>
+        <text class="sense-emoji" x="250" y="445" text-anchor="middle">⏳</text>
+        <text class="sense-text" x="250" y="465" text-anchor="middle">Time</text>
+        <text class="sense-count" x="250" y="480" text-anchor="middle">2</text>
+      </g>
+      <g class="products-time">
+        <circle class="product-circle" cx="120" cy="410" r="10" fill="#66a6ff"/>
+        <text class="product-text" x="105" y="405" text-anchor="end">Therapy Booth 2.0</text>
+        <circle class="product-circle" cx="120" cy="490" r="10" fill="#89f7fe"/>
+        <text class="product-text" x="105" y="485" text-anchor="end">SleepQ</text>
+      </g>
+
+      <!-- SYSTEM NODE & PRODUCTS -->
+      <g class="node sense-node-system">
+        <circle class="sense-circle" cx="350" cy="250" r="40" fill="url(#gradSystem)"/>
+        <text class="sense-emoji" x="350" y="245" text-anchor="middle">🔗</text>
+        <text class="sense-text" x="350" y="265" text-anchor="middle" fill="#333">System</text>
+        <text class="sense-count" x="350" y="280" text-anchor="middle" fill="#555">11</text>
+      </g>
+      <g class="products-system">
+        <circle class="product-circle" cx="300" cy="100" r="10" fill="#fda085"/>
+        <text class="product-text" x="300" y="80" text-anchor="middle">MediSpa Pro</text>
+        <circle class="product-circle" cx="360" cy="90" r="10" fill="#fda085"/>
+        <text class="product-text" x="360" y="70" text-anchor="middle">Booxtory</text>
+        <circle class="product-circle" cx="420" cy="100" r="10" fill="#fda085"/>
+        <text class="product-text" x="420" y="80" text-anchor="middle">MAiN</text>
+        <circle class="product-circle" cx="470" cy="130" r="10" fill="#f6d365"/>
+        <text class="product-text" x="485" y="125" text-anchor="start">GCC</text>
+        <circle class="product-circle" cx="500" cy="180" r="10" fill="#f6d365"/>
+        <text class="product-text" x="515" y="175" text-anchor="start">MIPPIA</text>
+        <circle class="product-circle" cx="250" cy="120" r="10" fill="#f6d365"/>
+        <text class="product-text" x="235" y="115" text-anchor="end">AA-2 Robot</text>
+        <circle class="product-circle" cx="200" cy="140" r="10" fill="#f6d365"/>
+        <text class="product-text" x="185" y="135" text-anchor="end">AIRET S9</text>
+        <circle class="product-circle" cx="150" cy="180" r="10" fill="#fda085"/>
+        <text class="product-text" x="135" y="175" text-anchor="end">STORYSYNC</text>
+        <circle class="product-circle" cx="120" cy="230" r="10" fill="#fda085"/>
+        <text class="product-text" x="105" y="225" text-anchor="end">VRINGON</text>
+        <circle class="product-circle" cx="110" cy="280" r="10" fill="#fda085"/>
+        <text class="product-text" x="95" y="275" text-anchor="end">X-Zone Master</text>
+        <circle class="product-circle" cx="120" cy="330" r="10" fill="#fda085"/>
+        <text class="product-text" x="105" y="325" text-anchor="end">Water Saver</text>
+      </g>
+
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background: #667eea;"></div>Sight (10)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #f5576c;"></div>Sound (9)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #00f2fe;"></div>Touch (8)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #fee140;"></div>Taste (6)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #a8edea;"></div>Scent (1)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #d299c2;"></div>Space (2)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #66a6ff;"></div>Time (2)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #fda085;"></div>System (11)</div>
+  </div>
+</body>
+</html>

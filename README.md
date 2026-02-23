@@ -6,7 +6,6 @@ Interactive web projects and tools built for **Ode by Muno**.
 
 - **[8c2-sensory-wheel](./8c2-sensory-wheel/)** — Spinning wheel for exploring all 28 unique pairings of Ode's eight sensory systems. React + Vite + Canvas.
 - **[ces-2026-interactive](./ces-2026-interactive/)** — Interactive sensory graph for CES 2026. Vanilla JS.
-- **travel-guide** — Print-ready travel guide generator (Athens Through Eight Senses). Python + WeasyPrint.
 
 ## Stack
 

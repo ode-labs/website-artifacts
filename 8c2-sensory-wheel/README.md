@@ -141,4 +141,4 @@ The `netlify.toml` in the root handles all configuration.
 
 Ode is an independent research platform exploring intelligence as perception across eight sensory systems. This tool is part of **Ode Labs** — technical tools and interactive frameworks.
 
-[ode.so](https://ode.so)
+[odebymuno.com](https://www.odebymuno.com/)

@@ -3,3 +3,5 @@
 node_modules/
 .env
 .env.local
+product-in-detail.pdf
+products-by-sense.pdf
